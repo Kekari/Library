@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca Digital - Gestión de Stock</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- ESTILOS GENERALES Y DE ESTRUCTURA --- */
+        #app-header, #app-main, #app-footer { display: none; }
+        #login-view { display: flex; justify-content: center; align-items: center; min-height: 90vh; padding: 1rem; }
+        
+        /* Formulario Login */
+        #login-form { background: #ffffff; border: 1px solid #e0e0e0; padding: 2.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); width: 100%; max-width: 420px; text-align: center; }
+        .login-logo { width: 70px; margin-bottom: 1rem; }
+        #login-form h2 { margin-bottom: 1.5rem; color: #333; }
+        .form-group { text-align: left; margin-bottom: 1.25rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; }
+        .form-group input, .form-group select { width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: 'Inter', sans-serif; font-size: 1rem; }
+        #login-error { color: #d93025; margin-top: 1rem; font-size: 0.9rem; height: 1.2em; }
+        .btn-primary { width: 100%; padding: 0.85rem; font-size: 1rem; }
+
+        /* Paneles de Gestión */
+        .management-panel { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+        .admin-user-panel { margin-top: 30px; padding-top: 20px; border-top: 2px solid #007aff; background-color: #f9faff; padding: 20px; border-radius: 8px; }
+        .add-book-form, .create-user-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .full-width { grid-column: 1 / -1; }
+        
+        /* Botones específicos */
+        .btn-delete { background-color: #dc3545; color: white; width: 100%; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; }
+        .btn-delete:hover { background-color: #c82333; }
+        .btn-change-pass { background-color: #28a745; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; margin-top: 10px; }
+        
+        /* Botones de Aprobación */
+        .btn-approve { background-color: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px; }
+        .btn-reject { background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+
+        /* Estados */
+        .status-pending { color: #f59e0b; font-weight: bold; } 
+        .status-approved { color: #28a745; font-weight: bold; }
+        .request-badge { background-color: #fff3cd; color: #856404; padding: 5px 10px; border-radius: 4px; border: 1px solid #ffeeba; margin-top: 5px; display: inline-block; font-size: 0.85rem; }
+
+        /* Estilo para editar stock en la tabla */
+        .stock-edit-group { display: flex; gap: 5px; align-items: center; }
+        .stock-input { width: 60px !important; padding: 5px !important; text-align: center; }
+        .btn-save-stock { background-color: #007aff; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-save-stock:hover { background-color: #0056b3; }
+
+    </style>
+</head>
+<body>
+
+    <div id="login-view" class="container">
+        <form id="login-form">
+            <img src="logo.png" alt="Logo INACAP" class="login-logo">
+            <h2>Acceso Biblioteca</h2>
+            <div class="form-group">
+                <label for="username">Usuario</label>
+                <input type="text" id="username" required placeholder="Usuario">
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" required placeholder="Contraseña">
+            </div>
+            <button type="submit" class="btn btn-primary">Ingresar</button>
+            <button type="button" id="btn-guest" class="btn btn-secondary" style="margin-top: 15px;">Ver Catálogo (Invitado)</button>
+            <p id="login-error"></p> 
+            <p style="margin-top: 20px; font-size: 0.85rem; color: #666;">¿Sin cuenta? Contacta al Administrador.</p>
+        </form>
+    </div>
+
+    <header id="app-header">
+        <nav class="container">
+            <a href="#" class="logo">
+                <img src="logo.png" alt="Logo INACAP"> 
+                <span>Biblioteca <strong>INACAP</strong></span>
+            </a>
+            <ul>
+                <li><a href="#" id="catalog-link" class="active">Catálogo</a></li>
+                <li><a href="#" id="profile-link">Mis Solicitudes</a></li>
+                <li id="management-menu-item" style="display: none;"><a href="#" id="stats-link">Gestión</a></li>
+                <li id="audit-menu-item" style="display: none;"><a href="#" id="audit-link">Auditoría</a></li>
+                <li><a href="#" id="logout-link" style="color: #d93025;">Salir</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main id="app-main" class="container">
+        
+        <div id="main-catalog-view">
+            <section class="search-section">
+                <form id="search-form">
+                    <input type="text" placeholder="Buscar por Título o Autor">
+                    <button type="submit" class="btn btn-primary">Buscar</button>
+                </form>
+            </section>
+            <section class="catalog-section">
+                <h2>Colección Bibliográfica</h2>
+                <div id="catalog-grid"></div>
+            </section>
+        </div>
+        
+        <section id="profile-section" class="catalog-section" style="display: none;">
+            <h2>Mi Cuenta</h2>
+            <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 20px;">
+                <h3>Cambiar Contraseña</h3>
+                <form id="change-pass-form" style="display: flex; gap: 10px; align-items: flex-end;">
+                    <div class="form-group" style="margin-bottom: 0; flex-grow: 1;">
+                        <input type="password" id="new-user-pass" required placeholder="Nueva contraseña">
+                    </div>
+                    <button type="submit" class="btn btn-change-pass">Actualizar</button>
+                </form>
+            </div>
+            <h2>Mis Libros y Solicitudes</h2>
+            <div id="profile-grid"></div>
+        </section>
+
+        <section id="stats-view" class="catalog-section" style="display: none;">
+            <h2>Panel de Gestión</h2>
+            
+            <div class="stats-container">
+                <div class="stat-card"><h3>Títulos</h3><p id="stat-total">0</p></div>
+                <div class="stat-card"><h3>Prestados/Pendientes</h3><p id="stat-loaned">0</p></div>
+                <div class="stat-card"><h3>Stock Libre</h3><p id="stat-available">0</p></div>
+            </div>
+
+            <div class="management-panel" style="border-top: 2px solid #f59e0b; background: #fffaf0; padding: 15px; border-radius: 8px;">
+                <h3 style="color: #d97706;">🔔 Solicitudes Pendientes</h3>
+                <table class="report-table">
+                    <thead><tr><th>Libro</th><th>Solicitante</th><th>Días</th><th>Acciones</th></tr></thead>
+                    <tbody id="requests-body"></tbody>
+                </table>
+            </div>
+
+            <div class="report-container" style="margin-top: 40px;">
+                <h3>📝 Inventario y Modificación de Stock</h3>
+                <p style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">Puede editar la cantidad total de copias. No puede disminuir el stock por debajo de la cantidad prestada actual.</p>
+                <table class="report-table">
+                    <thead><tr><th>Título</th><th>Stock Total (Editar)</th><th>Ocupados</th></tr></thead>
+                    <tbody id="top-books-body"></tbody>
+                </table>
+            </div>
+
+            <div class="management-panel">
+                <h3>📚 Agregar Nuevo Libro</h3>
+                <form id="add-book-form" class="add-book-form">
+                    <div class="form-group"><label>Título</label><input type="text" id="add-title" required></div>
+                    <div class="form-group"><label>Autor</label><input type="text" id="add-author" required></div>
+                    <div class="form-group"><label>Copias Iniciales</label><input type="number" id="add-stock" min="1" value="1" required></div>
+                    <div class="form-group full-width"><label>URL Portada</label><input type="text" id="add-img" required></div>
+                    <div class="form-group full-width"><button type="submit" class="btn btn-primary">Agregar</button></div>
+                </form>
+            </div>
+
+            <div id="admin-users-section" class="admin-user-panel" style="display: none;">
+                <h3>👤 Crear Usuarios (Admin)</h3>
+                <form id="create-user-form" class="create-user-form">
+                    <div class="form-group"><label>Usuario</label><input type="text" id="create-username" required></div>
+                    <div class="form-group"><label>Rol</label>
+                        <select id="create-role">
+                            <option value="estudiante">Estudiante</option>
+                            <option value="bibliotecario">Bibliotecario</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width"><label>Contraseña Inicial</label><input type="text" id="create-password" required></div>
+                    <div class="form-group full-width"><button type="submit" class="btn btn-primary" style="background-color: #0056b3;">Crear</button></div>
+                </form>
+            </div>
+        </section>
+
+        <section id="audit-view" class="catalog-section" style="display: none;">
+            <h2>Auditoría</h2>
+            <table class="report-table" id="audit-log-table">
+                <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th></tr></thead>
+                <tbody id="audit-log-body"></tbody>
+            </table>
+        </section>
+
+    </main>
+    
+    <div id="toast-notification"><p id="toast-message">mensaje</p></div>
+    <footer id="app-footer"><p>&copy; 2025 Universidad Tecnológica INACAP</p></footer>
+
+    <script>
+// --- BASE DE DATOS DE LIBROS ---
+        let baseDeDatosLibros = [
+            // --- FANTASÍA (20) ---
+            { id: 101, titulo: "El Nombre del Viento", autor: "Patrick Rothfuss", imgUrl: "https://covers.openlibrary.org/b/isbn/9788401337208-M.jpg", stock: 5, reservados: [] },
+            { id: 102, titulo: "Juego de Tronos", autor: "George R.R. Martin", imgUrl: "https://covers.openlibrary.org/b/isbn/9780553103540-M.jpg", stock: 4, reservados: [] },
+            { id: 103, titulo: "Harry Potter y la Piedra Filosofal", autor: "J.K. Rowling", imgUrl: "https://covers.openlibrary.org/b/isbn/9788478884452-M.jpg", stock: 6, reservados: [] },
+            { id: 104, titulo: "El Señor de los Anillos: La Comunidad", autor: "J.R.R. Tolkien", imgUrl: "https://covers.openlibrary.org/b/isbn/9788445071403-M.jpg", stock: 3, reservados: [] },
+            { id: 105, titulo: "El Hobbit", autor: "J.R.R. Tolkien", imgUrl: "https://covers.openlibrary.org/b/isbn/9780547928227-M.jpg", stock: 5, reservados: [] },
+            { id: 106, titulo: "Las Crónicas de Narnia", autor: "C.S. Lewis", imgUrl: "https://covers.openlibrary.org/b/isbn/9780064404990-M.jpg", stock: 4, reservados: [] },
+            { id: 107, titulo: "El Imperio Final (Mistborn)", autor: "Brandon Sanderson", imgUrl: "https://images.cdn1.buscalibre.com/fit-in/360x360/98/c3/98c377c388a95c075ee4bb91639592b6.jpg", stock: 5, reservados: [] },
+            { id: 108, titulo: "El Último Deseo (The Witcher)", autor: "Andrzej Sapkowski", imgUrl: "https://covers.openlibrary.org/b/isbn/9788498890075-M.jpg", stock: 4, reservados: [] },
+            { id: 109, titulo: "American Gods", autor: "Neil Gaiman", imgUrl: "https://m.media-amazon.com/images/I/716LpMKQ3iL._AC_UF1000,1000_QL80_.jpg", stock: 2, reservados: [] },
+            { id: 110, titulo: "Percy Jackson y el Ladrón del Rayo", autor: "Rick Riordan", imgUrl: "https://covers.openlibrary.org/b/isbn/9788498386264-M.jpg", stock: 5, reservados: [] },
+            { id: 111, titulo: "Eragon", autor: "Christopher Paolini", imgUrl: "https://covers.openlibrary.org/b/isbn/9780375826696-M.jpg", stock: 3, reservados: [] },
+            { id: 112, titulo: "La Historia Interminable", autor: "Michael Ende", imgUrl: "https://covers.openlibrary.org/b/isbn/9788420471549-M.jpg", stock: 4, reservados: [] },
+            { id: 113, titulo: "El Color de la Magia", autor: "Terry Pratchett", imgUrl: "https://covers.openlibrary.org/b/isbn/9788401323331-M.jpg", stock: 3, reservados: [] },
+            { id: 114, titulo: "Un Mago de Terramar", autor: "Ursula K. Le Guin", imgUrl: "https://www.planetadelibros.cl/usuaris/libros/fotos/346/original/345673_portada_un-mago-de-terramar_ursula-k-le-guin_202112231409.jpg", stock: 2, reservados: [] },
+            { id: 115, titulo: "Coraline", autor: "Neil Gaiman", imgUrl: "https://images.cdn1.buscalibre.com/fit-in/360x360/20/2c/202c38822978b108da46532ebf3f0710.jpg", stock: 5, reservados: [] },
+            { id: 116, titulo: "Buenos Presagios", autor: "Pratchett & Gaiman", imgUrl: "https://covers.openlibrary.org/b/isbn/9780060853983-M.jpg", stock: 3, reservados: [] },
+            { id: 117, titulo: "Stardust", autor: "Neil Gaiman", imgUrl: "https://covers.openlibrary.org/b/isbn/9780060934712-M.jpg", stock: 4, reservados: [] },
+            { id: 118, titulo: "El Ojo del Mundo", autor: "Robert Jordan", imgUrl: "https://covers.openlibrary.org/b/isbn/9788448039899-M.jpg", stock: 3, reservados: [] },
+            { id: 119, titulo: "Aprendiz de Asesino", autor: "Robin Hobb", imgUrl: "https://covers.openlibrary.org/b/isbn/9788499082332-M.jpg", stock: 2, reservados: [] },
+            { id: 120, titulo: "La Brújula Dorada", autor: "Philip Pullman", imgUrl: "https://images.cdn2.buscalibre.com/fit-in/360x360/b2/5e/b25e5ee603647b171bbffc96a5b1a966.jpg", stock: 5, reservados: [] },
+
+            // --- CIENCIA (10) ---
+            { id: 201, titulo: "Breve historia del tiempo", autor: "Stephen Hawking", imgUrl: "https://images.cdn3.buscalibre.com/fit-in/360x360/c1/d5/c1d562eb8d27c7af22c9f981f4de04f1.jpg", stock: 4, reservados: [] },
+            { id: 202, titulo: "Cosmos", autor: "Carl Sagan", imgUrl: "https://m.media-amazon.com/images/I/91uHpL1ATXL._UF1000,1000_QL80_.jpg", stock: 5, reservados: [] },
+            { id: 203, titulo: "El gen egoísta", autor: "Richard Dawkins", imgUrl: "https://covers.openlibrary.org/b/isbn/9788434501782-M.jpg", stock: 3, reservados: [] },
+            { id: 204, titulo: "El origen de las especies", autor: "Charles Darwin", imgUrl: "https://covers.openlibrary.org/b/isbn/9788420656076-M.jpg", stock: 4, reservados: [] },
+            { id: 205, titulo: "Sapiens: De animales a dioses", autor: "Yuval Noah Harari", imgUrl: "https://covers.openlibrary.org/b/isbn/9788499926223-M.jpg", stock: 6, reservados: [] },
+            { id: 206, titulo: "Una breve historia de casi todo", autor: "Bill Bryson", imgUrl: "https://images.cdn2.buscalibre.com/fit-in/360x360/ef/0b/ef0bcb2c4d24cf57c5a62b61e875adc9.jpg", stock: 3, reservados: [] },
+            { id: 207, titulo: "El mundo y sus demonios", autor: "Carl Sagan", imgUrl: "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1386735821i/66256.jpg", stock: 4, reservados: [] },
+            { id: 208, titulo: "La falsa medida del hombre", autor: "Stephen Jay Gould", imgUrl: "https://covers.openlibrary.org/b/isbn/9788484324836-M.jpg", stock: 2, reservados: [] },
+            { id: 209, titulo: "El hombre que confundió a su mujer con un sombrero", autor: "Oliver Sacks", imgUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ64W1hn2s-bWw_Xpl3ukKD-dCkN8T1gEDw2g&s", stock: 3, reservados: [] },
+            { id: 210, titulo: "Seis piezas fáciles", autor: "Richard P. Feynman", imgUrl: "https://covers.openlibrary.org/b/isbn/9788484324683-M.jpg", stock: 3, reservados: [] },
+
+            // --- HISTORIA DE CHILE (5) ---
+            { id: 301, titulo: "Historia secreta de Chile", autor: "Jorge Baradit", imgUrl: "https://images.cdn1.buscalibre.com/fit-in/360x360/90/e6/90e622edd9449b4b6cba3b6fca6ef64b.jpg", stock: 6, reservados: [] },
+            { id: 302, titulo: "Adiós al Séptimo de Línea", autor: "Jorge Inostrosa", imgUrl: "https://ecolectura.com/Content/Images/Libros/Adios_al_septimo_de__233304596.jpg", stock: 5, reservados: [] },
+            { id: 303, titulo: "Breve historia de Chile", autor: "Alfredo Sepúlveda", imgUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNtlo-57R9hBBAbX8u52ShITcSdojmRYQc3Q&s", stock: 4, reservados: [] },
+            { id: 304, titulo: "La Araucana", autor: "Alonso de Ercilla", imgUrl: "https://www.curriculumnacional.cl/614/articles-88484_thumbnail.thumb_iNormal.jpg", stock: 3, reservados: [] },
+            { id: 305, titulo: "Historia de Chile 1891-1973", autor: "Simon Collier", imgUrl: "https://librospascal.cl/wp-content/uploads/2021/11/historia-de-chile.jpg", stock: 2, reservados: [] },
+
+            // --- HISTORIA INTERNACIONAL (5) ---
+            { id: 401, titulo: "Armas, gérmenes y acero", autor: "Jared Diamond", imgUrl: "https://images.cdn1.buscalibre.com/fit-in/360x360/b2/bf/b2bfc034a2d886a10e42f9406e385caa.jpg", stock: 4, reservados: [] },
+            { id: 402, titulo: "SPQR: Una historia de la antigua Roma", autor: "Mary Beard", imgUrl: "https://covers.openlibrary.org/b/isbn/9788498929553-M.jpg", stock: 3, reservados: [] },
+            { id: 403, titulo: "Los cañones de agosto", autor: "Barbara W. Tuchman", imgUrl: "https://http2.mlstatic.com/D_NQ_NP_938416-MLU48298316663_112021-O.webp", stock: 2, reservados: [] },
+            { id: 404, titulo: "El diario de Ana Frank", autor: "Ana Frank", imgUrl: "https://covers.openlibrary.org/b/isbn/9788497593069-M.jpg", stock: 6, reservados: [] },
+            { id: 405, titulo: "Stalingrado", autor: "Antony Beevor", imgUrl: "https://images.cdn3.buscalibre.com/fit-in/360x360/c1/9b/c19bc7d456a598e77dbc6d90a2e8fad7.jpg", stock: 3, reservados: [] }
+        ];
+
+        let usuariosRegistrados = [
+            { username: "admin", password: "123", role: "admin" }, 
+            { username: "biblio", password: "123", role: "bibliotecario" },
+            { username: "alumno", password: "123", role: "estudiante" }
+        ];
+
+        let usuarioActual = null;
+        let registrosAuditoria = [];
+
+        document.addEventListener("DOMContentLoaded", function() {
+            
+            // Referencias DOM
+            const loginView = document.getElementById('login-view');
+            const appHeader = document.getElementById('app-header');
+            const appMain = document.getElementById('app-main');
+            const appFooter = document.getElementById('app-footer');
+            const loginForm = document.getElementById('login-form');
+            const btnGuest = document.getElementById('btn-guest');
+            
+            const catalogLink = document.getElementById('catalog-link');
+            const profileLink = document.getElementById('profile-link');
+            const managementMenuLink = document.getElementById('management-menu-item');
+            const auditMenuLink = document.getElementById('audit-menu-item');
+            
+            const mainCatalogView = document.getElementById('main-catalog-view');
+            const profileSection = document.getElementById('profile-section');
+            const statsView = document.getElementById('stats-view');
+            const auditView = document.getElementById('audit-view');
+            
+            const addBookForm = document.getElementById('add-book-form');
+            const createUserForm = document.getElementById('create-user-form');
+            const changePassForm = document.getElementById('change-pass-form');
+            const adminUsersSection = document.getElementById('admin-users-section');
+            
+            const grid = document.getElementById("catalog-grid");
+            const profileGrid = document.getElementById('profile-grid');
+            const toast = document.getElementById("toast-notification");
+            const toastMessage = document.getElementById("toast-message");
+
+            function registrarLog(usuario, accion) {
+                const timestamp = new Date().toLocaleString('es-CL');
+                registrosAuditoria.push({ timestamp, usuario, accion });
+            }
+
+            // --- NAVEGACIÓN ---
+            function mostrarVista(vista) {
+                mainCatalogView.style.display = 'none';
+                profileSection.style.display = 'none';
+                statsView.style.display = 'none';
+                auditView.style.display = 'none';
+                
+                [catalogLink, profileLink, document.getElementById('stats-link'), document.getElementById('audit-link')].forEach(l => l?.classList.remove('active'));
+
+                if(vista === 'catalogo') {
+                    mainCatalogView.style.display = 'block';
+                    catalogLink.classList.add('active');
+                    renderizarCatalogo();
+                } else if (vista === 'perfil') {
+                    profileSection.style.display = 'block';
+                    profileLink.classList.add('active');
+                    renderizarPerfil();
+                } else if (vista === 'stats') {
+                    statsView.style.display = 'block';
+                    document.getElementById('stats-link').classList.add('active');
+                    actualizarStats();
+                } else if (vista === 'audit') {
+                    auditView.style.display = 'block';
+                    document.getElementById('audit-link').classList.add('active');
+                    renderizarAudit();
+                }
+            }
+
+            // --- LOGIN ---
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const u = document.getElementById('username').value;
+                const p = document.getElementById('password').value;
+                const user = usuariosRegistrados.find(ur => ur.username === u && ur.password === p);
+
+                if (user) {
+                    usuarioActual = user;
+                    registrarLog(usuarioActual.username, "Inició sesión");
+                    
+                    managementMenuLink.style.display = 'none';
+                    auditMenuLink.style.display = 'none';
+                    profileLink.style.display = 'block';
+                    adminUsersSection.style.display = 'none';
+
+                    if (usuarioActual.role === 'admin') {
+                        managementMenuLink.style.display = 'block'; 
+                        auditMenuLink.style.display = 'block';      
+                        adminUsersSection.style.display = 'block';  
+                        profileLink.style.display = 'none';         
+                    } else if (usuarioActual.role === 'bibliotecario') {
+                        managementMenuLink.style.display = 'block'; 
+                        profileLink.style.display = 'none';         
+                    } else if (usuarioActual.role === 'guest') {
+                        profileLink.style.display = 'none';
+                    }
+
+                    loginView.style.display = 'none';
+                    appHeader.style.display = 'block';
+                    appMain.style.display = 'block';
+                    appFooter.style.display = 'block';
+                    mostrarVista('catalogo');
+                } else {
+                    document.getElementById('login-error').textContent = "Credenciales incorrectas.";
+                }
+            });
+
+            btnGuest.addEventListener('click', () => {
+                usuarioActual = { username: "Invitado", role: "guest" };
+                registrarLog("Invitado", "Entró al catálogo");
+                managementMenuLink.style.display = 'none';
+                auditMenuLink.style.display = 'none';
+                profileLink.style.display = 'none';
+                loginView.style.display = 'none';
+                appHeader.style.display = 'block';
+                appMain.style.display = 'block';
+                appFooter.style.display = 'block';
+                mostrarVista('catalogo');
+            });
+
+            document.getElementById('logout-link').addEventListener('click', (e) => {
+                e.preventDefault();
+                registrarLog(usuarioActual?.username || "Anon", "Cerró sesión");
+                usuarioActual = null;
+                appHeader.style.display = 'none';
+                appMain.style.display = 'none';
+                loginView.style.display = 'flex';
+                document.getElementById('username').value = "";
+                document.getElementById('password').value = "";
+            });
+
+            // --- ADMIN/BIBLIO: CREAR Y AGREGAR ---
+            createUserForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newU = document.getElementById('create-username').value;
+                const newR = document.getElementById('create-role').value;
+                const newP = document.getElementById('create-password').value;
+                if(usuariosRegistrados.find(u => u.username === newU)) { alert("Usuario existe"); return; }
+                usuariosRegistrados.push({ username: newU, password: newP, role: newR });
+                registrarLog(usuarioActual.username, `Creó usuario: ${newU}`);
+                mostrarToast(`Usuario ${newU} creado.`);
+                createUserForm.reset();
+            });
+
+            addBookForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const t = document.getElementById('add-title').value;
+                const a = document.getElementById('add-author').value;
+                const s = parseInt(document.getElementById('add-stock').value);
+                const i = document.getElementById('add-img').value;
+                baseDeDatosLibros.push({ id: Date.now(), titulo: t, autor: a, imgUrl: i, stock: s, reservados: [] });
+                registrarLog(usuarioActual.username, `Agregó libro: ${t}`);
+                mostrarToast("Libro agregado.");
+                addBookForm.reset();
+                actualizarStats();
+            });
+
+            // --- NUEVA FUNCIÓN: MODIFICAR STOCK ---
+            window.actualizarStock = (idLibro) => {
+                const input = document.getElementById(`stock-input-${idLibro}`);
+                const nuevoValor = parseInt(input.value);
+                const libro = baseDeDatosLibros.find(l => l.id === idLibro);
+
+                if (isNaN(nuevoValor) || nuevoValor < 0) {
+                    alert("Ingrese un número válido."); return;
+                }
+
+                // VALIDACIÓN: No se puede bajar el stock menos que los prestados
+                if (nuevoValor < libro.reservados.length) {
+                    alert(`Error: Hay ${libro.reservados.length} copias en uso. El stock no puede ser menor a eso.`);
+                    input.value = libro.stock; // Reset al valor original
+                    return;
+                }
+
+                libro.stock = nuevoValor;
+                registrarLog(usuarioActual.username, `Modificó stock de "${libro.titulo}" a ${nuevoValor}`);
+                mostrarToast("Stock actualizado correctamente.");
+                actualizarStats(); // Refrescar tabla
+            };
+
+            // --- PRE-SOLICITUD (ESTUDIANTE) ---
+            window.solicitarLibro = (id) => {
+                const libro = baseDeDatosLibros.find(l => l.id === id);
+                let diasInput = prompt(`¿Por cuántos días deseas solicitar "${libro.titulo}"? (Máximo 5)`);
+                if (diasInput === null) return; 
+                let dias = parseInt(diasInput);
+
+                if (isNaN(dias) || dias < 1 || dias > 5) {
+                    alert("Error: Debes ingresar un número entre 1 y 5.");
+                    return;
+                }
+
+                if (libro.stock > libro.reservados.length) {
+                    libro.reservados.push({ usuario: usuarioActual.username, dias: dias, estado: 'pendiente' });
+                    registrarLog(usuarioActual.username, `Solicitó: ${libro.titulo} por ${dias} días`);
+                    mostrarToast("Solicitud enviada.");
+                    renderizarCatalogo();
+                } else {
+                    alert("Lo sentimos, no hay stock disponible.");
+                    renderizarCatalogo();
+                }
+            };
+
+            // --- APROBACIÓN (BIBLIOTECARIO) ---
+            window.gestionarSolicitud = (libroId, usuarioSolicitante, accion) => {
+                const libro = baseDeDatosLibros.find(l => l.id === libroId);
+                const solicitudIndex = libro.reservados.findIndex(r => r.usuario === usuarioSolicitante);
+                if (solicitudIndex === -1) return;
+
+                if (accion === 'aprobar') {
+                    libro.reservados[solicitudIndex].estado = 'aprobado';
+                    registrarLog(usuarioActual.username, `Aprobó préstamo de "${libro.titulo}"`);
+                    mostrarToast("Solicitud Aprobada.");
+                } else if (accion === 'rechazar') {
+                    libro.reservados.splice(solicitudIndex, 1);
+                    registrarLog(usuarioActual.username, `Rechazó solicitud de "${libro.titulo}"`);
+                    mostrarToast("Solicitud Rechazada.");
+                }
+                actualizarStats(); 
+            };
+
+            // --- RENDERIZADO CATÁLOGO ---
+            function renderizarCatalogo() {
+                const termino = document.querySelector("#search-form input").value.toLowerCase();
+                const filtrados = baseDeDatosLibros.filter(l => l.titulo.toLowerCase().includes(termino));
+                grid.innerHTML = "";
+                
+                filtrados.forEach(libro => {
+                    let ocupados = libro.reservados.length;
+                    let disponibles = libro.stock - ocupados;
+                    const miReserva = libro.reservados.find(r => r.usuario === usuarioActual?.username);
+                    
+                    let btnHTML = "";
+                    let estadoTxt = `Disponibles: ${disponibles}`;
+                    let claseStatus = disponibles > 0 ? 'status-approved' : 'status-loaned';
+
+                    if (usuarioActual.role === 'estudiante') {
+                        if (miReserva) {
+                            if (miReserva.estado === 'pendiente') {
+                                estadoTxt = "Solicitud Pendiente"; claseStatus = "status-pending";
+                                btnHTML = `<button class="btn btn-secondary" disabled>Esperando Aprobación</button>`;
+                            } else {
+                                estadoTxt = `En tu poder (${miReserva.dias} días)`; claseStatus = "status-loaned";
+                                btnHTML = `<button class="btn btn-secondary" disabled>Ya lo tienes</button>`;
+                            }
+                        } else if (disponibles > 0) {
+                            btnHTML = `<button class="btn btn-secondary" onclick="solicitarLibro(${libro.id})">Solicitar</button>`;
+                        } else {
+                            estadoTxt = "Sin Stock";
+                            btnHTML = `<button class="btn btn-secondary" disabled>Agotado</button>`;
+                        }
+                    } else if (usuarioActual.role === 'admin' || usuarioActual.role === 'bibliotecario') {
+                        btnHTML = `<button class="btn-delete" onclick="eliminarLibro(${libro.id})">Eliminar</button>`;
+                    }
+
+                    grid.innerHTML += `
+                        <article class="book-card">
+                            <img src="${libro.imgUrl}" onerror="this.src='https://via.placeholder.com/200x300'">
+                            <div class="book-info">
+                                <h4>${libro.titulo}</h4><p>${libro.autor}</p>
+                                <span class="${claseStatus}">${estadoTxt}</span>
+                                ${btnHTML}
+                            </div>
+                        </article>`;
+                });
+            }
+
+            // --- RENDERIZADO PERFIL ---
+            function renderizarPerfil() {
+                profileGrid.innerHTML = "";
+                const misLibros = baseDeDatosLibros.filter(l => l.reservados.some(r => r.usuario === usuarioActual.username));
+                if(misLibros.length === 0) profileGrid.innerHTML = "<p>No tienes libros.</p>";
+                
+                misLibros.forEach(l => {
+                    const miR = l.reservados.find(r => r.usuario === usuarioActual.username);
+                    let badge = miR.estado === 'pendiente' 
+                        ? `<span class="request-badge status-pending">⏳ Pendiente</span>`
+                        : `<span class="request-badge status-approved">✅ Aprobado (${miR.dias} días)</span>`;
+                    let btnText = miR.estado === 'pendiente' ? "Cancelar Solicitud" : "Devolver Libro";
+
+                    profileGrid.innerHTML += `
+                        <article class="book-card">
+                            <img src="${l.imgUrl}">
+                            <div class="book-info">
+                                <h4>${l.titulo}</h4>
+                                ${badge}
+                                <button class="btn btn-return" onclick="devolver(${l.id})">${btnText}</button>
+                            </div>
+                        </article>`;
+                });
+            }
+
+            window.devolver = (id) => {
+                const libro = baseDeDatosLibros.find(l => l.id === id);
+                libro.reservados = libro.reservados.filter(r => r.usuario !== usuarioActual.username);
+                registrarLog(usuarioActual.username, `Devolvió/Canceló: ${libro.titulo}`);
+                mostrarToast("Operación exitosa."); renderizarPerfil();
+            };
+
+            window.eliminarLibro = (id) => {
+                if(confirm("¿Eliminar libro?")) {
+                    baseDeDatosLibros = baseDeDatosLibros.filter(l => l.id !== id);
+                    actualizarStats(); renderizarCatalogo();
+                }
+            };
+
+            // --- GESTIÓN, SOLICITUDES Y EDICIÓN DE STOCK ---
+            function actualizarStats() {
+                document.getElementById('stat-total').textContent = baseDeDatosLibros.length;
+                let totalPrestados = 0;
+                let htmlSolicitudes = "";
+
+                baseDeDatosLibros.forEach(libro => {
+                    totalPrestados += libro.reservados.length;
+                    libro.reservados.forEach(reserva => {
+                        if(reserva.estado === 'pendiente') {
+                            htmlSolicitudes += `
+                                <tr>
+                                    <td><strong>${libro.titulo}</strong></td>
+                                    <td>${reserva.usuario}</td>
+                                    <td>${reserva.dias} días</td>
+                                    <td>
+                                        <button class="btn-approve" onclick="gestionarSolicitud(${libro.id}, '${reserva.usuario}', 'aprobar')">✔</button>
+                                        <button class="btn-reject" onclick="gestionarSolicitud(${libro.id}, '${reserva.usuario}', 'rechazar')">✖</button>
+                                    </td>
+                                </tr>`;
+                        }
+                    });
+                });
+
+                document.getElementById('stat-loaned').textContent = totalPrestados;
+                const tbodyReq = document.getElementById('requests-body');
+                tbodyReq.innerHTML = htmlSolicitudes === "" ? "<tr><td colspan='4'>No hay solicitudes pendientes.</td></tr>" : htmlSolicitudes;
+
+                // --- TABLA DE INVENTARIO CON EDICIÓN DE STOCK ---
+                const tbodyInv = document.getElementById('top-books-body');
+                tbodyInv.innerHTML = "";
+                baseDeDatosLibros.forEach(l => {
+                    // Calculamos mínimo permitido
+                    const ocupados = l.reservados.length;
+                    tbodyInv.innerHTML += `
+                        <tr>
+                            <td>${l.titulo}</td>
+                            <td>
+                                <div class="stock-edit-group">
+                                    <input type="number" id="stock-input-${l.id}" 
+                                           class="stock-input" 
+                                           value="${l.stock}" 
+                                           min="${ocupados}">
+                                    <button class="btn-save-stock" onclick="actualizarStock(${l.id})" title="Guardar nuevo stock">💾</button>
+                                </div>
+                            </td>
+                            <td>${ocupados}</td>
+                        </tr>`;
+                });
+            }
+
+            // --- AUDITORÍA ---
+            function renderizarAudit() {
+                const tbody = document.getElementById('audit-log-body');
+                tbody.innerHTML = registrosAuditoria.slice().reverse().map(l => `<tr><td>${l.timestamp}</td><td>${l.usuario}</td><td>${l.accion}</td></tr>`).join('');
+            }
+
+            changePassForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                usuarioActual.password = document.getElementById('new-user-pass').value;
+                registrarLog(usuarioActual.username, "Cambió contraseña");
+                mostrarToast("Contraseña actualizada.");
+                document.getElementById('new-user-pass').value = "";
+            });
+
+            // Listeners Generales
+            document.querySelector("#search-form").addEventListener('submit', (e) => { e.preventDefault(); renderizarCatalogo(); });
+            document.querySelector("#search-form input").addEventListener('keyup', renderizarCatalogo);
+            
+            document.getElementById('catalog-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('catalogo'); });
+            document.getElementById('profile-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('perfil'); });
+            document.getElementById('stats-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('stats'); });
+            document.getElementById('audit-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('audit'); });
+
+            function mostrarToast(msg) {
+                toastMessage.textContent = msg; toast.classList.add("show");
+                setTimeout(() => toast.classList.remove("show"), 3000);
+            }
+        });
+    </script>
+</body>
+</html>
