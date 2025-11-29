@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biblioteca Digital - Gestión de Stock</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 
@@ -13,8 +13,8 @@
         /* --- ESTILOS GENERALES Y DE ESTRUCTURA --- */
         #app-header, #app-main, #app-footer { display: none; }
         #login-view { display: flex; justify-content: center; align-items: center; min-height: 90vh; padding: 1rem; }
-        
-        /* Formulario Login */
+
+        /* Formulario Login  */
         #login-form { background: #ffffff; border: 1px solid #e0e0e0; padding: 2.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); width: 100%; max-width: 420px; text-align: center; }
         .login-logo { width: 70px; margin-bottom: 1rem; }
         #login-form h2 { margin-bottom: 1.5rem; color: #333; }
@@ -29,18 +29,18 @@
         .admin-user-panel { margin-top: 30px; padding-top: 20px; border-top: 2px solid #007aff; background-color: #f9faff; padding: 20px; border-radius: 8px; }
         .add-book-form, .create-user-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
         .full-width { grid-column: 1 / -1; }
-        
+
         /* Botones específicos */
         .btn-delete { background-color: #dc3545; color: white; width: 100%; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; }
         .btn-delete:hover { background-color: #c82333; }
         .btn-change-pass { background-color: #28a745; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; margin-top: 10px; }
-        
+
         /* Botones de Aprobación */
         .btn-approve { background-color: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px; }
         .btn-reject { background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
 
         /* Estados */
-        .status-pending { color: #f59e0b; font-weight: bold; } 
+        .status-pending { color: #f59e0b; font-weight: bold; }
         .status-approved { color: #28a745; font-weight: bold; }
         .request-badge { background-color: #fff3cd; color: #856404; padding: 5px 10px; border-radius: 4px; border: 1px solid #ffeeba; margin-top: 5px; display: inline-block; font-size: 0.85rem; }
 
@@ -68,7 +68,7 @@
             </div>
             <button type="submit" class="btn btn-primary">Ingresar</button>
             <button type="button" id="btn-guest" class="btn btn-secondary" style="margin-top: 15px;">Ver Catálogo (Invitado)</button>
-            <p id="login-error"></p> 
+            <p id="login-error"></p>
             <p style="margin-top: 20px; font-size: 0.85rem; color: #666;">¿Sin cuenta? Contacta al Administrador.</p>
         </form>
     </div>
@@ -76,7 +76,7 @@
     <header id="app-header">
         <nav class="container">
             <a href="#" class="logo">
-                <img src="logo.png" alt="Logo INACAP"> 
+                <img src="logo.png" alt="Logo INACAP">
                 <span>Biblioteca <strong>INACAP</strong></span>
             </a>
             <ul>
@@ -90,7 +90,7 @@
     </header>
 
     <main id="app-main" class="container">
-        
+
         <div id="main-catalog-view">
             <section class="search-section">
                 <form id="search-form">
@@ -103,7 +103,7 @@
                 <div id="catalog-grid"></div>
             </section>
         </div>
-        
+
         <section id="profile-section" class="catalog-section" style="display: none;">
             <h2>Mi Cuenta</h2>
             <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 20px;">
@@ -121,7 +121,7 @@
 
         <section id="stats-view" class="catalog-section" style="display: none;">
             <h2>Panel de Gestión</h2>
-            
+
             <div class="stats-container">
                 <div class="stat-card"><h3>Títulos</h3><p id="stat-total">0</p></div>
                 <div class="stat-card"><h3>Prestados/Pendientes</h3><p id="stat-loaned">0</p></div>
@@ -181,7 +181,7 @@
         </section>
 
     </main>
-    
+
     <div id="toast-notification"><p id="toast-message">mensaje</p></div>
     <footer id="app-footer"><p>&copy; 2025 Universidad Tecnológica INACAP</p></footer>
 
@@ -238,7 +238,7 @@
         ];
 
         let usuariosRegistrados = [
-            { username: "admin", password: "123", role: "admin" }, 
+            { username: "admin", password: "123", role: "admin" },
             { username: "biblio", password: "123", role: "bibliotecario" },
             { username: "alumno", password: "123", role: "estudiante" }
         ];
@@ -247,7 +247,7 @@
         let registrosAuditoria = [];
 
         document.addEventListener("DOMContentLoaded", function() {
-            
+
             // Referencias DOM
             const loginView = document.getElementById('login-view');
             const appHeader = document.getElementById('app-header');
@@ -255,22 +255,22 @@
             const appFooter = document.getElementById('app-footer');
             const loginForm = document.getElementById('login-form');
             const btnGuest = document.getElementById('btn-guest');
-            
+
             const catalogLink = document.getElementById('catalog-link');
             const profileLink = document.getElementById('profile-link');
             const managementMenuLink = document.getElementById('management-menu-item');
             const auditMenuLink = document.getElementById('audit-menu-item');
-            
+
             const mainCatalogView = document.getElementById('main-catalog-view');
             const profileSection = document.getElementById('profile-section');
             const statsView = document.getElementById('stats-view');
             const auditView = document.getElementById('audit-view');
-            
+
             const addBookForm = document.getElementById('add-book-form');
             const createUserForm = document.getElementById('create-user-form');
             const changePassForm = document.getElementById('change-pass-form');
             const adminUsersSection = document.getElementById('admin-users-section');
-            
+
             const grid = document.getElementById("catalog-grid");
             const profileGrid = document.getElementById('profile-grid');
             const toast = document.getElementById("toast-notification");
@@ -287,7 +287,7 @@
                 profileSection.style.display = 'none';
                 statsView.style.display = 'none';
                 auditView.style.display = 'none';
-                
+
                 [catalogLink, profileLink, document.getElementById('stats-link'), document.getElementById('audit-link')].forEach(l => l?.classList.remove('active'));
 
                 if(vista === 'catalogo') {
@@ -319,20 +319,20 @@
                 if (user) {
                     usuarioActual = user;
                     registrarLog(usuarioActual.username, "Inició sesión");
-                    
+
                     managementMenuLink.style.display = 'none';
                     auditMenuLink.style.display = 'none';
                     profileLink.style.display = 'block';
                     adminUsersSection.style.display = 'none';
 
                     if (usuarioActual.role === 'admin') {
-                        managementMenuLink.style.display = 'block'; 
-                        auditMenuLink.style.display = 'block';      
-                        adminUsersSection.style.display = 'block';  
-                        profileLink.style.display = 'none';         
+                        managementMenuLink.style.display = 'block';
+                        auditMenuLink.style.display = 'block';
+                        adminUsersSection.style.display = 'block';
+                        profileLink.style.display = 'none';
                     } else if (usuarioActual.role === 'bibliotecario') {
-                        managementMenuLink.style.display = 'block'; 
-                        profileLink.style.display = 'none';         
+                        managementMenuLink.style.display = 'block';
+                        profileLink.style.display = 'none';
                     } else if (usuarioActual.role === 'guest') {
                         profileLink.style.display = 'none';
                     }
@@ -397,7 +397,7 @@
                 actualizarStats();
             });
 
-            // --- NUEVA FUNCIÓN: MODIFICAR STOCK ---
+            // --- MODIFICAR STOCK ---
             window.actualizarStock = (idLibro) => {
                 const input = document.getElementById(`stock-input-${idLibro}`);
                 const nuevoValor = parseInt(input.value);
@@ -424,7 +424,7 @@
             window.solicitarLibro = (id) => {
                 const libro = baseDeDatosLibros.find(l => l.id === id);
                 let diasInput = prompt(`¿Por cuántos días deseas solicitar "${libro.titulo}"? (Máximo 5)`);
-                if (diasInput === null) return; 
+                if (diasInput === null) return;
                 let dias = parseInt(diasInput);
 
                 if (isNaN(dias) || dias < 1 || dias > 5) {
@@ -458,7 +458,7 @@
                     registrarLog(usuarioActual.username, `Rechazó solicitud de "${libro.titulo}"`);
                     mostrarToast("Solicitud Rechazada.");
                 }
-                actualizarStats(); 
+                actualizarStats();
             };
 
             // --- RENDERIZADO CATÁLOGO ---
@@ -466,12 +466,12 @@
                 const termino = document.querySelector("#search-form input").value.toLowerCase();
                 const filtrados = baseDeDatosLibros.filter(l => l.titulo.toLowerCase().includes(termino));
                 grid.innerHTML = "";
-                
+
                 filtrados.forEach(libro => {
                     let ocupados = libro.reservados.length;
                     let disponibles = libro.stock - ocupados;
                     const miReserva = libro.reservados.find(r => r.usuario === usuarioActual?.username);
-                    
+
                     let btnHTML = "";
                     let estadoTxt = `Disponibles: ${disponibles}`;
                     let claseStatus = disponibles > 0 ? 'status-approved' : 'status-loaned';
@@ -512,10 +512,10 @@
                 profileGrid.innerHTML = "";
                 const misLibros = baseDeDatosLibros.filter(l => l.reservados.some(r => r.usuario === usuarioActual.username));
                 if(misLibros.length === 0) profileGrid.innerHTML = "<p>No tienes libros.</p>";
-                
+
                 misLibros.forEach(l => {
                     const miR = l.reservados.find(r => r.usuario === usuarioActual.username);
-                    let badge = miR.estado === 'pendiente' 
+                    let badge = miR.estado === 'pendiente'
                         ? `<span class="request-badge status-pending">⏳ Pendiente</span>`
                         : `<span class="request-badge status-approved">✅ Aprobado (${miR.dias} días)</span>`;
                     let btnText = miR.estado === 'pendiente' ? "Cancelar Solicitud" : "Devolver Libro";
@@ -539,9 +539,21 @@
                 mostrarToast("Operación exitosa."); renderizarPerfil();
             };
 
+            // --- FUNCIÓN ELIMINAR MODIFICADA ---
             window.eliminarLibro = (id) => {
-                if(confirm("¿Eliminar libro?")) {
+                // 1. Buscamos el libro antes de borrarlo
+                const libroAEliminar = baseDeDatosLibros.find(l => l.id === id);
+                if (!libroAEliminar) return;
+
+                // 2. Confirmamos con el título
+                if(confirm(`¿Estás seguro de eliminar el libro "${libroAEliminar.titulo}"?`)) {
+                    // 3. Eliminamos
                     baseDeDatosLibros = baseDeDatosLibros.filter(l => l.id !== id);
+                    
+                    // 4. Registramos en auditoría QUIÉN y QUÉ
+                    registrarLog(usuarioActual.username, `Eliminó el libro: ${libroAEliminar.titulo}`);
+                    
+                    mostrarToast("Libro eliminado.");
                     actualizarStats(); renderizarCatalogo();
                 }
             };
@@ -585,9 +597,9 @@
                             <td>${l.titulo}</td>
                             <td>
                                 <div class="stock-edit-group">
-                                    <input type="number" id="stock-input-${l.id}" 
-                                           class="stock-input" 
-                                           value="${l.stock}" 
+                                    <input type="number" id="stock-input-${l.id}"
+                                           class="stock-input"
+                                           value="${l.stock}"
                                            min="${ocupados}">
                                     <button class="btn-save-stock" onclick="actualizarStock(${l.id})" title="Guardar nuevo stock">💾</button>
                                 </div>
@@ -599,8 +611,15 @@
 
             // --- AUDITORÍA ---
             function renderizarAudit() {
-                const tbody = document.getElementById('audit-log-body');
-                tbody.innerHTML = registrosAuditoria.slice().reverse().map(l => `<tr><td>${l.timestamp}</td><td>${l.usuario}</td><td>${l.accion}</td></tr>`).join('');
+                const tbody = document.getElementById('audit-log-table').querySelector('tbody');
+                // Slice y reverse para ver lo más nuevo primero
+                tbody.innerHTML = registrosAuditoria.slice().reverse().map(l => 
+                    `<tr>
+                        <td>${l.timestamp}</td>
+                        <td>${l.usuario}</td>
+                        <td>${l.accion}</td>
+                    </tr>`
+                ).join('');
             }
 
             changePassForm.addEventListener('submit', (e) => {
@@ -614,7 +633,7 @@
             // Listeners Generales
             document.querySelector("#search-form").addEventListener('submit', (e) => { e.preventDefault(); renderizarCatalogo(); });
             document.querySelector("#search-form input").addEventListener('keyup', renderizarCatalogo);
-            
+
             document.getElementById('catalog-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('catalogo'); });
             document.getElementById('profile-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('perfil'); });
             document.getElementById('stats-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('stats'); });
