@@ -150,6 +150,7 @@
                 <div class="stat-card"><h3>Prestados/Pendientes</h3><p id="stat-loaned">0</p></div>
                 <div class="stat-card"><h3>Stock Libre</h3><p id="stat-available">0</p></div>
             </div>
+            
             <div class="management-panel" style="border-top: 2px solid #f59e0b; background: #fffaf0; padding: 15px; border-radius: 8px;">
                 <h3 style="color: #d97706;">🔔 Solicitudes Pendientes</h3>
                 <table class="report-table">
@@ -157,6 +158,16 @@
                     <tbody id="requests-body"></tbody>
                 </table>
             </div>
+
+            <div class="management-panel" style="border-top: 2px solid #28a745; background: #f0fff4; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                <h3 style="color: #155724;">✅ Préstamos Activos (Historial)</h3>
+                <p style="font-size: 0.85rem; color: #155724;">Aquí se muestran los libros que están actualmente en poder de los estudiantes.</p>
+                <table class="report-table">
+                    <thead><tr><th>Libro</th><th>Usuario</th><th>Fecha Préstamo</th><th>Devolución Estimada</th></tr></thead>
+                    <tbody id="active-loans-body"></tbody>
+                </table>
+            </div>
+
             <div class="report-container" style="margin-top: 40px;">
                 <h3>📝 Inventario y Modificación de Stock</h3>
                 <p style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">Puede editar la cantidad total de copias. No puede disminuir el stock por debajo de la cantidad prestada actual.</p>
@@ -283,13 +294,13 @@
             const profileLink = document.getElementById('profile-link');
             const managementMenuLink = document.getElementById('management-menu-item');
             const auditMenuLink = document.getElementById('audit-menu-item');
-            const usersMenuLink = document.getElementById('users-menu-item'); // Referencia al nuevo menú
+            const usersMenuLink = document.getElementById('users-menu-item');
 
             const mainCatalogView = document.getElementById('main-catalog-view');
             const profileSection = document.getElementById('profile-section');
             const statsView = document.getElementById('stats-view');
             const auditView = document.getElementById('audit-view');
-            const usersView = document.getElementById('users-view'); // Referencia a la nueva vista
+            const usersView = document.getElementById('users-view');
 
             const addBookForm = document.getElementById('add-book-form');
             const createUserForm = document.getElementById('create-user-form');
@@ -313,7 +324,6 @@
                 auditView.style.display = 'none';
                 usersView.style.display = 'none';
 
-                // Reset active links
                 document.querySelectorAll('nav a').forEach(l => l.classList.remove('active'));
 
                 if(vista === 'catalogo') {
@@ -328,7 +338,7 @@
                     statsView.style.display = 'block';
                     document.getElementById('stats-link').classList.add('active');
                     actualizarStats();
-                } else if (vista === 'users') { // NUEVO CASE
+                } else if (vista === 'users') { 
                     usersView.style.display = 'block';
                     document.getElementById('users-link').classList.add('active');
                     renderizarUsuarios();
@@ -358,7 +368,7 @@
                     if (usuarioActual.role === 'admin') {
                         managementMenuLink.style.display = 'block';
                         auditMenuLink.style.display = 'block';
-                        usersMenuLink.style.display = 'block'; // Mostrar solo a admin
+                        usersMenuLink.style.display = 'block'; 
                         profileLink.style.display = 'none';
                     } else if (usuarioActual.role === 'bibliotecario') {
                         managementMenuLink.style.display = 'block';
@@ -402,7 +412,6 @@
                 document.getElementById('password').value = "";
             });
 
-            // --- ADMIN: CREAR USUARIO (Movid a sección Users) ---
             createUserForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const newU = document.getElementById('create-username').value;
@@ -416,7 +425,7 @@
                 registrarLog(usuarioActual.username, `Creó usuario: ${newU}`);
                 mostrarToast(`Usuario ${newU} creado.`);
                 createUserForm.reset();
-                renderizarUsuarios(); // Actualizar tabla
+                renderizarUsuarios(); 
             });
 
             addBookForm.addEventListener('submit', (e) => {
@@ -473,6 +482,7 @@
                 }
             };
 
+            // --- APROBACIÓN MODIFICADA PARA CALCULAR FECHA DEVOLUCIÓN ---
             window.gestionarSolicitud = (libroId, usuarioSolicitante, accion) => {
                 const libro = baseDeDatosLibros.find(l => l.id === libroId);
                 const solicitudIndex = libro.reservados.findIndex(r => r.usuario === usuarioSolicitante);
@@ -480,6 +490,9 @@
 
                 if (accion === 'aprobar') {
                     libro.reservados[solicitudIndex].estado = 'aprobado';
+                    // NUEVO: Guardamos la fecha de inicio para calcular la devolución
+                    libro.reservados[solicitudIndex].fechaInicio = new Date().toISOString(); 
+
                     registrarLog(usuarioActual.username, `Aprobó préstamo de "${libro.titulo}"`);
                     mostrarToast("Solicitud Aprobada.");
                 } else if (accion === 'rechazar') {
@@ -490,15 +503,12 @@
                 actualizarStats();
             };
 
-            // --- NUEVAS FUNCIONES DE GESTIÓN DE USUARIOS ---
             function renderizarUsuarios() {
                 const tbody = document.getElementById('users-table-body');
                 tbody.innerHTML = "";
                 usuariosRegistrados.forEach(user => {
-                    // Prevenir borrar o modificar al propio admin conectado
                     const isSelf = user.username === usuarioActual.username;
                     
-                    // Selector de Rol
                     let roleSelect = `
                         <select onchange="cambiarRolUsuario('${user.username}', this.value)" ${isSelf ? 'disabled' : ''}>
                             <option value="estudiante" ${user.role === 'estudiante' ? 'selected' : ''}>Estudiante</option>
@@ -507,7 +517,6 @@
                         </select>
                     `;
 
-                    // Botones
                     let buttons = `
                         <div class="action-btn-group">
                             <button class="btn-icon btn-edit-pass" onclick="adminCambiarPass('${user.username}')" title="Cambiar Contraseña">🔑</button>
@@ -657,14 +666,18 @@
                 }
             };
 
+            // --- FUNCIÓN ACTUALIZAR STATS CON TABLA DE ACTIVOS ---
             function actualizarStats() {
                 document.getElementById('stat-total').textContent = baseDeDatosLibros.length;
                 let totalPrestados = 0;
                 let htmlSolicitudes = "";
+                let htmlActivos = ""; // Variable para la nueva tabla
 
                 baseDeDatosLibros.forEach(libro => {
                     totalPrestados += libro.reservados.length;
                     libro.reservados.forEach(reserva => {
+                        
+                        // 1. Solicitudes Pendientes
                         if(reserva.estado === 'pendiente') {
                             htmlSolicitudes += `
                                 <tr>
@@ -676,13 +689,37 @@
                                         <button class="btn-reject" onclick="gestionarSolicitud(${libro.id}, '${reserva.usuario}', 'rechazar')">✖</button>
                                     </td>
                                 </tr>`;
+                        } 
+                        // 2. Préstamos Activos (Aprobados)
+                        else if (reserva.estado === 'aprobado') {
+                            // Calcular fecha devolución
+                            let fechaInicio = reserva.fechaInicio ? new Date(reserva.fechaInicio) : new Date();
+                            let fechaFin = new Date(fechaInicio);
+                            fechaFin.setDate(fechaFin.getDate() + reserva.dias);
+                            
+                            let fechaFinStr = fechaFin.toLocaleDateString('es-CL');
+                            let fechaInicioStr = fechaInicio.toLocaleDateString('es-CL');
+
+                            htmlActivos += `
+                                <tr>
+                                    <td><strong>${libro.titulo}</strong></td>
+                                    <td>${reserva.usuario}</td>
+                                    <td>${fechaInicioStr}</td>
+                                    <td style="color: #dc3545; font-weight: bold;">${fechaFinStr}</td>
+                                </tr>`;
                         }
                     });
                 });
 
                 document.getElementById('stat-loaned').textContent = totalPrestados;
+                
+                // Rellenar Pendientes
                 const tbodyReq = document.getElementById('requests-body');
                 tbodyReq.innerHTML = htmlSolicitudes === "" ? "<tr><td colspan='4'>No hay solicitudes pendientes.</td></tr>" : htmlSolicitudes;
+
+                // Rellenar Activos (NUEVO)
+                const tbodyActivos = document.getElementById('active-loans-body');
+                tbodyActivos.innerHTML = htmlActivos === "" ? "<tr><td colspan='4'>No hay préstamos activos.</td></tr>" : htmlActivos;
 
                 const tbodyInv = document.getElementById('top-books-body');
                 tbodyInv.innerHTML = "";
@@ -731,7 +768,7 @@
             document.getElementById('profile-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('perfil'); });
             document.getElementById('stats-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('stats'); });
             document.getElementById('audit-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('audit'); });
-            document.getElementById('users-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('users'); }); // Listener para el nuevo link
+            document.getElementById('users-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('users'); });
 
             function mostrarToast(msg) {
                 toastMessage.textContent = msg; toast.classList.add("show");
