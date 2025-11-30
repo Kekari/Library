@@ -50,67 +50,20 @@
         .btn-save-stock { background-color: #007aff; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
         .btn-save-stock:hover { background-color: #0056b3; }
 
-        /* --- NUEVO: ESTILOS DE PERFIL DE USUARIO --- */
-        .user-profile-header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 30px;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #eee;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-        
-        .avatar-wrapper {
-            position: relative;
-            width: 100px;
-            height: 100px;
-            margin-bottom: 15px;
-        }
+        /* --- ESTILOS DE PERFIL DE USUARIO --- */
+        .user-profile-header { display: flex; flex-direction: column; align-items: center; padding: 30px; background: white; border-radius: 8px; border: 1px solid #eee; margin-bottom: 25px; text-align: center; }
+        .avatar-wrapper { position: relative; width: 100px; height: 100px; margin-bottom: 15px; }
+        .profile-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #007aff; }
+        .btn-edit-avatar { position: absolute; bottom: 0; right: 0; background: #28a745; color: white; border: 2px solid white; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .user-name-display { margin: 0; font-size: 1.5rem; color: #333; }
+        .user-role-badge { display: inline-block; background-color: #e0f2fe; color: #0284c7; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-top: 5px; font-weight: 600; }
 
-        .profile-avatar {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #007aff;
-        }
-
-        .btn-edit-avatar {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            background: #28a745;
-            color: white;
-            border: 2px solid white;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-        }
-        
-        .user-name-display {
-            margin: 0;
-            font-size: 1.5rem;
-            color: #333;
-        }
-
-        .user-role-badge {
-            display: inline-block;
-            background-color: #e0f2fe;
-            color: #0284c7;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            margin-top: 5px;
-            font-weight: 600;
-        }
+        /* --- ESTILOS TABLA USUARIOS --- */
+        .user-row-avatar { width: 35px; height: 35px; border-radius: 50%; vertical-align: middle; margin-right: 10px; }
+        .action-btn-group { display: flex; gap: 5px; }
+        .btn-icon { padding: 6px 10px; border-radius: 4px; border: none; cursor: pointer; color: white; }
+        .btn-edit-pass { background-color: #f59e0b; }
+        .btn-delete-user { background-color: #dc3545; }
 
     </style>
 </head>
@@ -145,6 +98,7 @@
                 <li><a href="#" id="catalog-link" class="active">Catálogo</a></li>
                 <li><a href="#" id="profile-link">Mis Solicitudes</a></li>
                 <li id="management-menu-item" style="display: none;"><a href="#" id="stats-link">Gestión</a></li>
+                <li id="users-menu-item" style="display: none;"><a href="#" id="users-link">Usuarios</a></li>
                 <li id="audit-menu-item" style="display: none;"><a href="#" id="audit-link">Auditoría</a></li>
                 <li><a href="#" id="logout-link" style="color: #d93025;">Salir</a></li>
             </ul>
@@ -167,16 +121,14 @@
         </div>
 
         <section id="profile-section" class="catalog-section" style="display: none;">
-            
             <div class="user-profile-header">
                 <div class="avatar-wrapper">
-                    <img src="https://ui-avatars.com/api/?name=User&background=random" id="profile-avatar-img" class="profile-avatar" alt="Avatar">
+                    <img src="" id="profile-avatar-img" class="profile-avatar" alt="Avatar">
                     <button class="btn-edit-avatar" onclick="cambiarAvatar()" title="Cambiar Avatar">✏️</button>
                 </div>
                 <h2 class="user-name-display" id="profile-username-display">Usuario</h2>
                 <span class="user-role-badge" id="profile-role-display">Estudiante</span>
             </div>
-
             <h2>Configuración</h2>
             <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 20px;">
                 <h3>Cambiar Contraseña</h3>
@@ -192,14 +144,12 @@
         </section>
 
         <section id="stats-view" class="catalog-section" style="display: none;">
-            <h2>Panel de Gestión</h2>
-
+            <h2>Panel de Gestión de Libros</h2>
             <div class="stats-container">
                 <div class="stat-card"><h3>Títulos</h3><p id="stat-total">0</p></div>
                 <div class="stat-card"><h3>Prestados/Pendientes</h3><p id="stat-loaned">0</p></div>
                 <div class="stat-card"><h3>Stock Libre</h3><p id="stat-available">0</p></div>
             </div>
-
             <div class="management-panel" style="border-top: 2px solid #f59e0b; background: #fffaf0; padding: 15px; border-radius: 8px;">
                 <h3 style="color: #d97706;">🔔 Solicitudes Pendientes</h3>
                 <table class="report-table">
@@ -207,7 +157,6 @@
                     <tbody id="requests-body"></tbody>
                 </table>
             </div>
-
             <div class="report-container" style="margin-top: 40px;">
                 <h3>📝 Inventario y Modificación de Stock</h3>
                 <p style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">Puede editar la cantidad total de copias. No puede disminuir el stock por debajo de la cantidad prestada actual.</p>
@@ -216,7 +165,6 @@
                     <tbody id="top-books-body"></tbody>
                 </table>
             </div>
-
             <div class="management-panel">
                 <h3>📚 Agregar Nuevo Libro</h3>
                 <form id="add-book-form" class="add-book-form">
@@ -227,21 +175,32 @@
                     <div class="form-group full-width"><button type="submit" class="btn btn-primary">Agregar</button></div>
                 </form>
             </div>
+        </section>
 
-            <div id="admin-users-section" class="admin-user-panel" style="display: none;">
-                <h3>👤 Crear Usuarios (Admin)</h3>
+        <section id="users-view" class="catalog-section" style="display: none;">
+            <h2>Gestión de Usuarios</h2>
+            
+            <div class="admin-user-panel" style="margin-top: 0; margin-bottom: 30px;">
+                <h3>👤 Crear Nuevo Usuario</h3>
                 <form id="create-user-form" class="create-user-form">
                     <div class="form-group"><label>Usuario</label><input type="text" id="create-username" required></div>
                     <div class="form-group"><label>Rol</label>
                         <select id="create-role">
                             <option value="estudiante">Estudiante</option>
                             <option value="bibliotecario">Bibliotecario</option>
+                            <option value="admin">Administrador</option>
                         </select>
                     </div>
                     <div class="form-group full-width"><label>Contraseña Inicial</label><input type="text" id="create-password" required></div>
-                    <div class="form-group full-width"><button type="submit" class="btn btn-primary" style="background-color: #0056b3;">Crear</button></div>
+                    <div class="form-group full-width"><button type="submit" class="btn btn-primary" style="background-color: #0056b3;">Crear Usuario</button></div>
                 </form>
             </div>
+
+            <h3>Lista de Usuarios Registrados</h3>
+            <table class="report-table" id="users-table">
+                <thead><tr><th>Avatar</th><th>Usuario</th><th>Rol (Modificar)</th><th>Acciones</th></tr></thead>
+                <tbody id="users-table-body"></tbody>
+            </table>
         </section>
 
         <section id="audit-view" class="catalog-section" style="display: none;">
@@ -258,9 +217,7 @@
     <footer id="app-footer"><p>&copy; 2025 Universidad Tecnológica INACAP</p></footer>
 
     <script>
-// --- BASE DE DATOS DE LIBROS ---
         let baseDeDatosLibros = [
-            // --- FANTASÍA (20) ---
             { id: 101, titulo: "El Nombre del Viento", autor: "Patrick Rothfuss", imgUrl: "https://covers.openlibrary.org/b/isbn/9788401337208-M.jpg", stock: 5, reservados: [] },
             { id: 102, titulo: "Juego de Tronos", autor: "George R.R. Martin", imgUrl: "https://covers.openlibrary.org/b/isbn/9780553103540-M.jpg", stock: 4, reservados: [] },
             { id: 103, titulo: "Harry Potter y la Piedra Filosofal", autor: "J.K. Rowling", imgUrl: "https://covers.openlibrary.org/b/isbn/9788478884452-M.jpg", stock: 6, reservados: [] },
@@ -281,8 +238,6 @@
             { id: 118, titulo: "El Ojo del Mundo", autor: "Robert Jordan", imgUrl: "https://covers.openlibrary.org/b/isbn/9788448039899-M.jpg", stock: 3, reservados: [] },
             { id: 119, titulo: "Aprendiz de Asesino", autor: "Robin Hobb", imgUrl: "https://covers.openlibrary.org/b/isbn/9788499082332-M.jpg", stock: 2, reservados: [] },
             { id: 120, titulo: "La Brújula Dorada", autor: "Philip Pullman", imgUrl: "https://images.cdn2.buscalibre.com/fit-in/360x360/b2/5e/b25e5ee603647b171bbffc96a5b1a966.jpg", stock: 5, reservados: [] },
-
-            // --- CIENCIA (10) ---
             { id: 201, titulo: "Breve historia del tiempo", autor: "Stephen Hawking", imgUrl: "https://images.cdn3.buscalibre.com/fit-in/360x360/c1/d5/c1d562eb8d27c7af22c9f981f4de04f1.jpg", stock: 4, reservados: [] },
             { id: 202, titulo: "Cosmos", autor: "Carl Sagan", imgUrl: "https://m.media-amazon.com/images/I/91uHpL1ATXL._UF1000,1000_QL80_.jpg", stock: 5, reservados: [] },
             { id: 203, titulo: "El gen egoísta", autor: "Richard Dawkins", imgUrl: "https://covers.openlibrary.org/b/isbn/9788434501782-M.jpg", stock: 3, reservados: [] },
@@ -293,15 +248,11 @@
             { id: 208, titulo: "La falsa medida del hombre", autor: "Stephen Jay Gould", imgUrl: "https://covers.openlibrary.org/b/isbn/9788484324836-M.jpg", stock: 2, reservados: [] },
             { id: 209, titulo: "El hombre que confundió a su mujer con un sombrero", autor: "Oliver Sacks", imgUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ64W1hn2s-bWw_Xpl3ukKD-dCkN8T1gEDw2g&s", stock: 3, reservados: [] },
             { id: 210, titulo: "Seis piezas fáciles", autor: "Richard P. Feynman", imgUrl: "https://covers.openlibrary.org/b/isbn/9788484324683-M.jpg", stock: 3, reservados: [] },
-
-            // --- HISTORIA DE CHILE (5) ---
             { id: 301, titulo: "Historia secreta de Chile", autor: "Jorge Baradit", imgUrl: "https://images.cdn1.buscalibre.com/fit-in/360x360/90/e6/90e622edd9449b4b6cba3b6fca6ef64b.jpg", stock: 6, reservados: [] },
             { id: 302, titulo: "Adiós al Séptimo de Línea", autor: "Jorge Inostrosa", imgUrl: "https://ecolectura.com/Content/Images/Libros/Adios_al_septimo_de__233304596.jpg", stock: 5, reservados: [] },
             { id: 303, titulo: "Breve historia de Chile", autor: "Alfredo Sepúlveda", imgUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNtlo-57R9hBBAbX8u52ShITcSdojmRYQc3Q&s", stock: 4, reservados: [] },
             { id: 304, titulo: "La Araucana", autor: "Alonso de Ercilla", imgUrl: "https://www.curriculumnacional.cl/614/articles-88484_thumbnail.thumb_iNormal.jpg", stock: 3, reservados: [] },
             { id: 305, titulo: "Historia de Chile 1891-1973", autor: "Simon Collier", imgUrl: "https://librospascal.cl/wp-content/uploads/2021/11/historia-de-chile.jpg", stock: 2, reservados: [] },
-
-            // --- HISTORIA INTERNACIONAL (5) ---
             { id: 401, titulo: "Armas, gérmenes y acero", autor: "Jared Diamond", imgUrl: "https://images.cdn1.buscalibre.com/fit-in/360x360/b2/bf/b2bfc034a2d886a10e42f9406e385caa.jpg", stock: 4, reservados: [] },
             { id: 402, titulo: "SPQR: Una historia de la antigua Roma", autor: "Mary Beard", imgUrl: "https://covers.openlibrary.org/b/isbn/9788498929553-M.jpg", stock: 3, reservados: [] },
             { id: 403, titulo: "Los cañones de agosto", autor: "Barbara W. Tuchman", imgUrl: "https://http2.mlstatic.com/D_NQ_NP_938416-MLU48298316663_112021-O.webp", stock: 2, reservados: [] },
@@ -310,7 +261,6 @@
         ];
 
         let usuariosRegistrados = [
-            // Agregué la propiedad 'avatar' a los usuarios
             { username: "admin", password: "123", role: "admin", avatar: "https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff" },
             { username: "biblio", password: "123", role: "bibliotecario", avatar: "https://ui-avatars.com/api/?name=Biblio&background=ffc107&color=fff" },
             { username: "alumno", password: "123", role: "estudiante", avatar: "https://ui-avatars.com/api/?name=Alumno&background=28a745&color=fff" }
@@ -333,16 +283,17 @@
             const profileLink = document.getElementById('profile-link');
             const managementMenuLink = document.getElementById('management-menu-item');
             const auditMenuLink = document.getElementById('audit-menu-item');
+            const usersMenuLink = document.getElementById('users-menu-item'); // Referencia al nuevo menú
 
             const mainCatalogView = document.getElementById('main-catalog-view');
             const profileSection = document.getElementById('profile-section');
             const statsView = document.getElementById('stats-view');
             const auditView = document.getElementById('audit-view');
+            const usersView = document.getElementById('users-view'); // Referencia a la nueva vista
 
             const addBookForm = document.getElementById('add-book-form');
             const createUserForm = document.getElementById('create-user-form');
             const changePassForm = document.getElementById('change-pass-form');
-            const adminUsersSection = document.getElementById('admin-users-section');
 
             const grid = document.getElementById("catalog-grid");
             const profileGrid = document.getElementById('profile-grid');
@@ -360,8 +311,10 @@
                 profileSection.style.display = 'none';
                 statsView.style.display = 'none';
                 auditView.style.display = 'none';
+                usersView.style.display = 'none';
 
-                [catalogLink, profileLink, document.getElementById('stats-link'), document.getElementById('audit-link')].forEach(l => l?.classList.remove('active'));
+                // Reset active links
+                document.querySelectorAll('nav a').forEach(l => l.classList.remove('active'));
 
                 if(vista === 'catalogo') {
                     mainCatalogView.style.display = 'block';
@@ -375,6 +328,10 @@
                     statsView.style.display = 'block';
                     document.getElementById('stats-link').classList.add('active');
                     actualizarStats();
+                } else if (vista === 'users') { // NUEVO CASE
+                    usersView.style.display = 'block';
+                    document.getElementById('users-link').classList.add('active');
+                    renderizarUsuarios();
                 } else if (vista === 'audit') {
                     auditView.style.display = 'block';
                     document.getElementById('audit-link').classList.add('active');
@@ -395,13 +352,13 @@
 
                     managementMenuLink.style.display = 'none';
                     auditMenuLink.style.display = 'none';
+                    usersMenuLink.style.display = 'none';
                     profileLink.style.display = 'block';
-                    adminUsersSection.style.display = 'none';
 
                     if (usuarioActual.role === 'admin') {
                         managementMenuLink.style.display = 'block';
                         auditMenuLink.style.display = 'block';
-                        adminUsersSection.style.display = 'block';
+                        usersMenuLink.style.display = 'block'; // Mostrar solo a admin
                         profileLink.style.display = 'none';
                     } else if (usuarioActual.role === 'bibliotecario') {
                         managementMenuLink.style.display = 'block';
@@ -425,6 +382,7 @@
                 registrarLog("Invitado", "Entró al catálogo");
                 managementMenuLink.style.display = 'none';
                 auditMenuLink.style.display = 'none';
+                usersMenuLink.style.display = 'none';
                 profileLink.style.display = 'none';
                 loginView.style.display = 'none';
                 appHeader.style.display = 'block';
@@ -444,7 +402,7 @@
                 document.getElementById('password').value = "";
             });
 
-            // --- ADMIN/BIBLIO: CREAR Y AGREGAR ---
+            // --- ADMIN: CREAR USUARIO (Movid a sección Users) ---
             createUserForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const newU = document.getElementById('create-username').value;
@@ -452,13 +410,13 @@
                 const newP = document.getElementById('create-password').value;
                 if(usuariosRegistrados.find(u => u.username === newU)) { alert("Usuario existe"); return; }
                 
-                // Asignar avatar por defecto al crear
                 let defaultAvatar = `https://ui-avatars.com/api/?name=${newU}&background=random`;
                 
                 usuariosRegistrados.push({ username: newU, password: newP, role: newR, avatar: defaultAvatar });
                 registrarLog(usuarioActual.username, `Creó usuario: ${newU}`);
                 mostrarToast(`Usuario ${newU} creado.`);
                 createUserForm.reset();
+                renderizarUsuarios(); // Actualizar tabla
             });
 
             addBookForm.addEventListener('submit', (e) => {
@@ -532,6 +490,70 @@
                 actualizarStats();
             };
 
+            // --- NUEVAS FUNCIONES DE GESTIÓN DE USUARIOS ---
+            function renderizarUsuarios() {
+                const tbody = document.getElementById('users-table-body');
+                tbody.innerHTML = "";
+                usuariosRegistrados.forEach(user => {
+                    // Prevenir borrar o modificar al propio admin conectado
+                    const isSelf = user.username === usuarioActual.username;
+                    
+                    // Selector de Rol
+                    let roleSelect = `
+                        <select onchange="cambiarRolUsuario('${user.username}', this.value)" ${isSelf ? 'disabled' : ''}>
+                            <option value="estudiante" ${user.role === 'estudiante' ? 'selected' : ''}>Estudiante</option>
+                            <option value="bibliotecario" ${user.role === 'bibliotecario' ? 'selected' : ''}>Bibliotecario</option>
+                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Administrador</option>
+                        </select>
+                    `;
+
+                    // Botones
+                    let buttons = `
+                        <div class="action-btn-group">
+                            <button class="btn-icon btn-edit-pass" onclick="adminCambiarPass('${user.username}')" title="Cambiar Contraseña">🔑</button>
+                            ${!isSelf ? `<button class="btn-icon btn-delete-user" onclick="eliminarUsuario('${user.username}')" title="Eliminar Usuario">🗑️</button>` : ''}
+                        </div>
+                    `;
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><img src="${user.avatar || 'https://via.placeholder.com/35'}" class="user-row-avatar"></td>
+                            <td>${user.username} ${isSelf ? ' (Tú)' : ''}</td>
+                            <td>${roleSelect}</td>
+                            <td>${buttons}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            window.cambiarRolUsuario = (username, newRole) => {
+                const u = usuariosRegistrados.find(u => u.username === username);
+                if(u) {
+                    u.role = newRole;
+                    registrarLog(usuarioActual.username, `Cambió rol de ${username} a ${newRole}`);
+                    mostrarToast("Rol actualizado.");
+                }
+            };
+
+            window.adminCambiarPass = (username) => {
+                const newPass = prompt(`Ingrese nueva contraseña para el usuario "${username}":`);
+                if(newPass) {
+                    const u = usuariosRegistrados.find(u => u.username === username);
+                    u.password = newPass;
+                    registrarLog(usuarioActual.username, `Cambió contraseña de ${username}`);
+                    mostrarToast("Contraseña modificada.");
+                }
+            };
+
+            window.eliminarUsuario = (username) => {
+                if(confirm(`¿Estás seguro de eliminar al usuario "${username}"? Esta acción no se puede deshacer.`)) {
+                    usuariosRegistrados = usuariosRegistrados.filter(u => u.username !== username);
+                    registrarLog(usuarioActual.username, `Eliminó usuario: ${username}`);
+                    mostrarToast("Usuario eliminado.");
+                    renderizarUsuarios();
+                }
+            };
+
             function renderizarCatalogo() {
                 const termino = document.querySelector("#search-form input").value.toLowerCase();
                 const filtrados = baseDeDatosLibros.filter(l => l.titulo.toLowerCase().includes(termino));
@@ -577,18 +599,12 @@
                 });
             }
 
-            // --- RENDERIZADO PERFIL (MODIFICADO) ---
             function renderizarPerfil() {
-                // 1. Actualizar Datos de Usuario en el Header
                 document.getElementById('profile-username-display').textContent = usuarioActual.username;
                 document.getElementById('profile-role-display').textContent = usuarioActual.role.charAt(0).toUpperCase() + usuarioActual.role.slice(1);
-                
-                // Si el usuario no tiene avatar definido, usar uno genérico
                 const avatarUrl = usuarioActual.avatar ? usuarioActual.avatar : `https://ui-avatars.com/api/?name=${usuarioActual.username}&background=random`;
                 document.getElementById('profile-avatar-img').src = avatarUrl;
 
-
-                // 2. Renderizar Libros
                 profileGrid.innerHTML = "";
                 const misLibros = baseDeDatosLibros.filter(l => l.reservados.some(r => r.usuario === usuarioActual.username));
                 if(misLibros.length === 0) profileGrid.innerHTML = "<p>No tienes libros.</p>";
@@ -612,13 +628,12 @@
                 });
             }
             
-            // --- NUEVA FUNCIÓN: CAMBIAR AVATAR ---
             window.cambiarAvatar = () => {
                 const nuevaUrl = prompt("Ingresa la URL de tu nueva imagen de perfil:", usuarioActual.avatar || "");
                 if (nuevaUrl) {
                     usuarioActual.avatar = nuevaUrl;
                     registrarLog(usuarioActual.username, "Cambió su foto de perfil");
-                    renderizarPerfil(); // Refrescar la vista
+                    renderizarPerfil(); 
                     mostrarToast("Foto de perfil actualizada.");
                 }
             };
@@ -716,6 +731,7 @@
             document.getElementById('profile-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('perfil'); });
             document.getElementById('stats-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('stats'); });
             document.getElementById('audit-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('audit'); });
+            document.getElementById('users-link').addEventListener('click', (e) => { e.preventDefault(); mostrarVista('users'); }); // Listener para el nuevo link
 
             function mostrarToast(msg) {
                 toastMessage.textContent = msg; toast.classList.add("show");
