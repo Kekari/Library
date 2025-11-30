@@ -168,14 +168,6 @@
                 </table>
             </div>
 
-            <div class="report-container" style="margin-top: 40px;">
-                <h3>📝 Inventario y Modificación de Stock</h3>
-                <p style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">Puede editar la cantidad total de copias. No puede disminuir el stock por debajo de la cantidad prestada actual.</p>
-                <table class="report-table">
-                    <thead><tr><th>Título</th><th>Stock Total (Editar)</th><th>Ocupados</th></tr></thead>
-                    <tbody id="top-books-body"></tbody>
-                </table>
-            </div>
             <div class="management-panel">
                 <h3>📚 Agregar Nuevo Libro</h3>
                 <form id="add-book-form" class="add-book-form">
@@ -186,6 +178,16 @@
                     <div class="form-group full-width"><button type="submit" class="btn btn-primary">Agregar</button></div>
                 </form>
             </div>
+
+            <div class="report-container" style="margin-top: 40px;">
+                <h3>📝 Inventario y Modificación de Stock</h3>
+                <p style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">Puede editar la cantidad total de copias. No puede disminuir el stock por debajo de la cantidad prestada actual.</p>
+                <table class="report-table">
+                    <thead><tr><th>Título</th><th>Stock Total (Editar)</th><th>Ocupados</th></tr></thead>
+                    <tbody id="top-books-body"></tbody>
+                </table>
+            </div>
+            
         </section>
 
         <section id="users-view" class="catalog-section" style="display: none;">
@@ -482,7 +484,6 @@
                 }
             };
 
-            // --- APROBACIÓN MODIFICADA PARA CALCULAR FECHA DEVOLUCIÓN ---
             window.gestionarSolicitud = (libroId, usuarioSolicitante, accion) => {
                 const libro = baseDeDatosLibros.find(l => l.id === libroId);
                 const solicitudIndex = libro.reservados.findIndex(r => r.usuario === usuarioSolicitante);
@@ -490,7 +491,6 @@
 
                 if (accion === 'aprobar') {
                     libro.reservados[solicitudIndex].estado = 'aprobado';
-                    // NUEVO: Guardamos la fecha de inicio para calcular la devolución
                     libro.reservados[solicitudIndex].fechaInicio = new Date().toISOString(); 
 
                     registrarLog(usuarioActual.username, `Aprobó préstamo de "${libro.titulo}"`);
@@ -666,18 +666,16 @@
                 }
             };
 
-            // --- FUNCIÓN ACTUALIZAR STATS CON TABLA DE ACTIVOS ---
             function actualizarStats() {
                 document.getElementById('stat-total').textContent = baseDeDatosLibros.length;
                 let totalPrestados = 0;
                 let htmlSolicitudes = "";
-                let htmlActivos = ""; // Variable para la nueva tabla
+                let htmlActivos = ""; 
 
                 baseDeDatosLibros.forEach(libro => {
                     totalPrestados += libro.reservados.length;
                     libro.reservados.forEach(reserva => {
                         
-                        // 1. Solicitudes Pendientes
                         if(reserva.estado === 'pendiente') {
                             htmlSolicitudes += `
                                 <tr>
@@ -690,9 +688,7 @@
                                     </td>
                                 </tr>`;
                         } 
-                        // 2. Préstamos Activos (Aprobados)
                         else if (reserva.estado === 'aprobado') {
-                            // Calcular fecha devolución
                             let fechaInicio = reserva.fechaInicio ? new Date(reserva.fechaInicio) : new Date();
                             let fechaFin = new Date(fechaInicio);
                             fechaFin.setDate(fechaFin.getDate() + reserva.dias);
@@ -713,11 +709,9 @@
 
                 document.getElementById('stat-loaned').textContent = totalPrestados;
                 
-                // Rellenar Pendientes
                 const tbodyReq = document.getElementById('requests-body');
                 tbodyReq.innerHTML = htmlSolicitudes === "" ? "<tr><td colspan='4'>No hay solicitudes pendientes.</td></tr>" : htmlSolicitudes;
 
-                // Rellenar Activos (NUEVO)
                 const tbodyActivos = document.getElementById('active-loans-body');
                 tbodyActivos.innerHTML = htmlActivos === "" ? "<tr><td colspan='4'>No hay préstamos activos.</td></tr>" : htmlActivos;
 
