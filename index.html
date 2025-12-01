@@ -34,6 +34,7 @@
         .btn-delete { background-color: #dc3545; color: white; width: 100%; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; }
         .btn-delete:hover { background-color: #c82333; }
         .btn-change-pass { background-color: #28a745; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; margin-top: 10px; }
+        .btn-change-pass:disabled { background-color: #ccc; cursor: not-allowed; }
 
         /* Botones de Aprobación */
         .btn-approve { background-color: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px; }
@@ -64,6 +65,19 @@
         .btn-icon { padding: 6px 10px; border-radius: 4px; border: none; cursor: pointer; color: white; }
         .btn-edit-pass { background-color: #f59e0b; }
         .btn-delete-user { background-color: #dc3545; }
+        
+        .reset-request-badge { display: inline-block; background-color: #fee2e2; color: #991b1b; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; margin-left: 5px; border: 1px solid #fecaca; }
+
+        .forgot-pass-link { display: block; margin-top: 15px; color: #007aff; text-decoration: none; font-size: 0.9rem; cursor: pointer; }
+        .forgot-pass-link:hover { text-decoration: underline; }
+
+        /* --- CORRECCIÓN GRID: IGUALAR PERFIL A CATÁLOGO --- */
+        /* Aseguramos que ambos contenedores usen las mismas reglas de grilla */
+        #catalog-grid, #profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 30px;
+        }
 
     </style>
 </head>
@@ -82,9 +96,11 @@
                 <input type="password" id="password" required placeholder="Contraseña">
             </div>
             <button type="submit" class="btn btn-primary">Ingresar</button>
+            
+            <a onclick="solicitarRecuperacion()" class="forgot-pass-link">¿Olvidaste tu contraseña? Solicitar cambio</a>
+            
             <button type="button" id="btn-guest" class="btn btn-secondary" style="margin-top: 15px;">Ver Catálogo (Invitado)</button>
             <p id="login-error"></p>
-            <p style="margin-top: 20px; font-size: 0.85rem; color: #666;">¿Sin cuenta? Contacta al Administrador.</p>
         </form>
     </div>
 
@@ -129,16 +145,21 @@
                 <h2 class="user-name-display" id="profile-username-display">Usuario</h2>
                 <span class="user-role-badge" id="profile-role-display">Estudiante</span>
             </div>
+            
             <h2>Configuración</h2>
             <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 20px;">
                 <h3>Cambiar Contraseña</h3>
+                <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">Por seguridad, solo puedes cambiar tu contraseña una vez. Si necesitas cambiarla de nuevo, contacta al administrador.</p>
+                
                 <form id="change-pass-form" style="display: flex; gap: 10px; align-items: flex-end;">
                     <div class="form-group" style="margin-bottom: 0; flex-grow: 1;">
                         <input type="password" id="new-user-pass" required placeholder="Nueva contraseña">
                     </div>
-                    <button type="submit" class="btn btn-change-pass">Actualizar</button>
+                    <button type="submit" id="btn-submit-pass" class="btn btn-change-pass">Actualizar</button>
                 </form>
+                <p id="pass-change-msg" style="color: #d93025; font-size: 0.9rem; margin-top: 10px; display: none;">⚠ Ya has utilizado tu cambio de contraseña único.</p>
             </div>
+            
             <h2>Mis Libros y Solicitudes</h2>
             <div id="profile-grid"></div>
         </section>
@@ -161,7 +182,6 @@
 
             <div class="management-panel" style="border-top: 2px solid #28a745; background: #f0fff4; padding: 15px; border-radius: 8px; margin-top: 20px;">
                 <h3 style="color: #155724;">✅ Préstamos Activos (Historial)</h3>
-                <p style="font-size: 0.85rem; color: #155724;">Aquí se muestran los libros que están actualmente en poder de los estudiantes.</p>
                 <table class="report-table">
                     <thead><tr><th>Libro</th><th>Usuario</th><th>Fecha Préstamo</th><th>Devolución Estimada</th></tr></thead>
                     <tbody id="active-loans-body"></tbody>
@@ -181,7 +201,6 @@
 
             <div class="report-container" style="margin-top: 40px;">
                 <h3>📝 Inventario y Modificación de Stock</h3>
-                <p style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">Puede editar la cantidad total de copias. No puede disminuir el stock por debajo de la cantidad prestada actual.</p>
                 <table class="report-table">
                     <thead><tr><th>Título</th><th>Stock Total (Editar)</th><th>Ocupados</th></tr></thead>
                     <tbody id="top-books-body"></tbody>
@@ -210,6 +229,7 @@
             </div>
 
             <h3>Lista de Usuarios Registrados</h3>
+            <p style="font-size: 0.9rem; color: #666;">Los usuarios con la etiqueta <span class="reset-request-badge">🔑 Solicitud Cambio</span> han pedido restablecer su contraseña.</p>
             <table class="report-table" id="users-table">
                 <thead><tr><th>Avatar</th><th>Usuario</th><th>Rol (Modificar)</th><th>Acciones</th></tr></thead>
                 <tbody id="users-table-body"></tbody>
@@ -274,10 +294,12 @@
         ];
 
         let usuariosRegistrados = [
-            { username: "admin", password: "123", role: "admin", avatar: "https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff" },
-            { username: "biblio", password: "123", role: "bibliotecario", avatar: "https://ui-avatars.com/api/?name=Biblio&background=ffc107&color=fff" },
-            { username: "alumno", password: "123", role: "estudiante", avatar: "https://ui-avatars.com/api/?name=Alumno&background=28a745&color=fff" }
+            { username: "admin", password: "123", role: "admin", avatar: "https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff", passwordChanged: false },
+            { username: "biblio", password: "123", role: "bibliotecario", avatar: "https://ui-avatars.com/api/?name=Biblio&background=ffc107&color=fff", passwordChanged: false },
+            { username: "alumno", password: "123", role: "estudiante", avatar: "https://ui-avatars.com/api/?name=Alumno&background=28a745&color=fff", passwordChanged: false }
         ];
+
+        let solicitudesRecuperacion = [];
 
         let usuarioActual = null;
         let registrosAuditoria = [];
@@ -351,6 +373,25 @@
                 }
             }
 
+            // --- SOLICITUD DE RECUPERACIÓN ---
+            window.solicitarRecuperacion = () => {
+                const userRec = prompt("Ingresa tu nombre de usuario para solicitar el cambio:");
+                if(userRec) {
+                    const usuarioExiste = usuariosRegistrados.find(u => u.username === userRec);
+                    if(usuarioExiste) {
+                        if(!solicitudesRecuperacion.includes(userRec)) {
+                            solicitudesRecuperacion.push(userRec);
+                            registrarLog("SISTEMA", `Solicitud de cambio de contraseña recibida para: ${userRec}`);
+                            alert("Solicitud enviada al administrador. Contacta con biblioteca para obtener tu nueva clave.");
+                        } else {
+                            alert("Ya existe una solicitud pendiente para este usuario.");
+                        }
+                    } else {
+                        alert("Usuario no encontrado.");
+                    }
+                }
+            };
+
             // --- LOGIN ---
             loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -423,7 +464,7 @@
                 
                 let defaultAvatar = `https://ui-avatars.com/api/?name=${newU}&background=random`;
                 
-                usuariosRegistrados.push({ username: newU, password: newP, role: newR, avatar: defaultAvatar });
+                usuariosRegistrados.push({ username: newU, password: newP, role: newR, avatar: defaultAvatar, passwordChanged: false });
                 registrarLog(usuarioActual.username, `Creó usuario: ${newU}`);
                 mostrarToast(`Usuario ${newU} creado.`);
                 createUserForm.reset();
@@ -509,6 +550,9 @@
                 usuariosRegistrados.forEach(user => {
                     const isSelf = user.username === usuarioActual.username;
                     
+                    const hasRequest = solicitudesRecuperacion.includes(user.username);
+                    const nameDisplay = `${user.username} ${isSelf ? ' (Tú)' : ''} ${hasRequest ? '<span class="reset-request-badge">🔑 Solicitud Cambio</span>' : ''}`;
+
                     let roleSelect = `
                         <select onchange="cambiarRolUsuario('${user.username}', this.value)" ${isSelf ? 'disabled' : ''}>
                             <option value="estudiante" ${user.role === 'estudiante' ? 'selected' : ''}>Estudiante</option>
@@ -527,7 +571,7 @@
                     tbody.innerHTML += `
                         <tr>
                             <td><img src="${user.avatar || 'https://via.placeholder.com/35'}" class="user-row-avatar"></td>
-                            <td>${user.username} ${isSelf ? ' (Tú)' : ''}</td>
+                            <td>${nameDisplay}</td>
                             <td>${roleSelect}</td>
                             <td>${buttons}</td>
                         </tr>
@@ -549,8 +593,12 @@
                 if(newPass) {
                     const u = usuariosRegistrados.find(u => u.username === username);
                     u.password = newPass;
-                    registrarLog(usuarioActual.username, `Cambió contraseña de ${username}`);
-                    mostrarToast("Contraseña modificada.");
+                    u.passwordChanged = false;
+                    solicitudesRecuperacion = solicitudesRecuperacion.filter(req => req !== username);
+
+                    registrarLog(usuarioActual.username, `Admin cambió contraseña de ${username}`);
+                    mostrarToast("Contraseña modificada y desbloqueada.");
+                    renderizarUsuarios(); 
                 }
             };
 
@@ -613,6 +661,20 @@
                 document.getElementById('profile-role-display').textContent = usuarioActual.role.charAt(0).toUpperCase() + usuarioActual.role.slice(1);
                 const avatarUrl = usuarioActual.avatar ? usuarioActual.avatar : `https://ui-avatars.com/api/?name=${usuarioActual.username}&background=random`;
                 document.getElementById('profile-avatar-img').src = avatarUrl;
+
+                const passInput = document.getElementById('new-user-pass');
+                const passBtn = document.getElementById('btn-submit-pass');
+                const msg = document.getElementById('pass-change-msg');
+
+                if (usuarioActual.passwordChanged) {
+                    passInput.disabled = true;
+                    passBtn.disabled = true;
+                    msg.style.display = 'block';
+                } else {
+                    passInput.disabled = false;
+                    passBtn.disabled = false;
+                    msg.style.display = 'none';
+                }
 
                 profileGrid.innerHTML = "";
                 const misLibros = baseDeDatosLibros.filter(l => l.reservados.some(r => r.usuario === usuarioActual.username));
@@ -750,9 +812,11 @@
             changePassForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 usuarioActual.password = document.getElementById('new-user-pass').value;
+                usuarioActual.passwordChanged = true;
                 registrarLog(usuarioActual.username, "Cambió contraseña");
                 mostrarToast("Contraseña actualizada.");
                 document.getElementById('new-user-pass').value = "";
+                renderizarPerfil();
             });
 
             document.querySelector("#search-form").addEventListener('submit', (e) => { e.preventDefault(); renderizarCatalogo(); });
