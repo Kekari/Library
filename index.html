@@ -71,8 +71,7 @@
         .forgot-pass-link { display: block; margin-top: 15px; color: #007aff; text-decoration: none; font-size: 0.9rem; cursor: pointer; }
         .forgot-pass-link:hover { text-decoration: underline; }
 
-        /* --- CORRECCIÓN GRID: IGUALAR PERFIL A CATÁLOGO --- */
-        /* Aseguramos que ambos contenedores usen las mismas reglas de grilla */
+        /* --- CORRECCIÓN GRID --- */
         #catalog-grid, #profile-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -96,9 +95,7 @@
                 <input type="password" id="password" required placeholder="Contraseña">
             </div>
             <button type="submit" class="btn btn-primary">Ingresar</button>
-            
             <a onclick="solicitarRecuperacion()" class="forgot-pass-link">¿Olvidaste tu contraseña? Solicitar cambio</a>
-            
             <button type="button" id="btn-guest" class="btn btn-secondary" style="margin-top: 15px;">Ver Catálogo (Invitado)</button>
             <p id="login-error"></p>
         </form>
@@ -150,7 +147,6 @@
             <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 20px;">
                 <h3>Cambiar Contraseña</h3>
                 <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">Por seguridad, solo puedes cambiar tu contraseña una vez. Si necesitas cambiarla de nuevo, contacta al administrador.</p>
-                
                 <form id="change-pass-form" style="display: flex; gap: 10px; align-items: flex-end;">
                     <div class="form-group" style="margin-bottom: 0; flex-grow: 1;">
                         <input type="password" id="new-user-pass" required placeholder="Nueva contraseña">
@@ -206,12 +202,10 @@
                     <tbody id="top-books-body"></tbody>
                 </table>
             </div>
-            
         </section>
 
         <section id="users-view" class="catalog-section" style="display: none;">
             <h2>Gestión de Usuarios</h2>
-            
             <div class="admin-user-panel" style="margin-top: 0; margin-bottom: 30px;">
                 <h3>👤 Crear Nuevo Usuario</h3>
                 <form id="create-user-form" class="create-user-form">
@@ -227,7 +221,6 @@
                     <div class="form-group full-width"><button type="submit" class="btn btn-primary" style="background-color: #0056b3;">Crear Usuario</button></div>
                 </form>
             </div>
-
             <h3>Lista de Usuarios Registrados</h3>
             <p style="font-size: 0.9rem; color: #666;">Los usuarios con la etiqueta <span class="reset-request-badge">🔑 Solicitud Cambio</span> han pedido restablecer su contraseña.</p>
             <table class="report-table" id="users-table">
@@ -728,16 +721,23 @@
                 }
             };
 
+            // --- ACTUALIZACIÓN STATS MODIFICADA ---
             function actualizarStats() {
+                // Títulos (libros únicos en el array)
                 document.getElementById('stat-total').textContent = baseDeDatosLibros.length;
+                
                 let totalPrestados = 0;
+                let totalStockFisico = 0; // Suma de todos los libros físicos
+                
                 let htmlSolicitudes = "";
                 let htmlActivos = ""; 
 
                 baseDeDatosLibros.forEach(libro => {
+                    // Sumamos el stock físico de este libro al total
+                    totalStockFisico += libro.stock;
                     totalPrestados += libro.reservados.length;
+                    
                     libro.reservados.forEach(reserva => {
-                        
                         if(reserva.estado === 'pendiente') {
                             htmlSolicitudes += `
                                 <tr>
@@ -770,6 +770,10 @@
                 });
 
                 document.getElementById('stat-loaned').textContent = totalPrestados;
+                
+                // NUEVO CÁLCULO: Stock Libre = Total Físico - Prestados
+                let stockLibre = totalStockFisico - totalPrestados;
+                document.getElementById('stat-available').textContent = stockLibre;
                 
                 const tbodyReq = document.getElementById('requests-body');
                 tbodyReq.innerHTML = htmlSolicitudes === "" ? "<tr><td colspan='4'>No hay solicitudes pendientes.</td></tr>" : htmlSolicitudes;
